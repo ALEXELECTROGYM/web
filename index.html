@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Registro de Usuario - Gimnasio</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: Arial, sans-serif;
       background: #f4f4f4;
@@ -12,6 +16,7 @@
       flex-direction: column;
       align-items: center;
       padding: 20px;
+      margin: 0;
     }
 
     .container {
@@ -19,7 +24,7 @@
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      width: 90%;
+      width: 100%;
       max-width: 600px;
       margin-bottom: 30px;
     }
@@ -32,6 +37,7 @@
     label {
       font-weight: bold;
       margin-top: 10px;
+      display: block;
     }
 
     input, button {
@@ -40,6 +46,7 @@
       margin: 10px 0;
       border-radius: 5px;
       border: 1px solid #ccc;
+      font-size: 1em;
     }
 
     button {
@@ -63,7 +70,7 @@
     }
 
     .calendar-container {
-      max-width: 100%;
+      width: 100%;
       overflow-x: auto;
     }
 
@@ -71,13 +78,15 @@
       width: 100%;
       border-collapse: collapse;
       margin-top: 30px;
+      font-size: 0.9em;
+      min-width: 600px;
     }
 
     th, td {
       border: 1px solid #ccc;
       padding: 8px;
       text-align: center;
-      min-width: 100px;
+      min-width: 80px;
     }
 
     th {
@@ -87,12 +96,34 @@
     .occupied {
       background-color: #d3d3d3;
     }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto 20px auto;
+    }
+
+    @media (max-width: 480px) {
+      input, button {
+        font-size: 0.95em;
+        padding: 8px;
+      }
+
+      table {
+        font-size: 0.8em;
+      }
+
+      th, td {
+        padding: 6px;
+      }
+    }
   </style>
 </head>
 <body>
-<div></div>
-  <div class="container"><img src="logogym.jpg" alt="texto descriptivo" width="582" height="124">  
-     <h1>Registro de Usuario</h1>
+  <div class="container">
+    <img src="logogym.jpg" alt="Logo del gimnasio">
+    <h1>Registro de Usuario</h1>
 
     <form id="registroForm">
       <label for="nombre">Nombre</label>
@@ -111,7 +142,7 @@
 
     <div class="message" id="mensaje"></div>
     <div class="error" id="error"></div>
-</div>
+  </div>
 
   <div class="container">
     <label for="semana">Ver calendario semanal desde fecha:</label>
@@ -184,10 +215,9 @@
         fechaBase = new Date(inputFecha.value);
       }
 
-      // Ajustar al lunes
       const dia = fechaBase.getDay();
       const lunes = new Date(fechaBase);
-      lunes.setDate(lunes.getDate() - (dia === 0 ? 6 : dia - 1)); // si es domingo, restar 6
+      lunes.setDate(lunes.getDate() - (dia === 0 ? 6 : dia - 1));
 
       const diasSemana = [];
       for (let i = 0; i < 7; i++) {
@@ -196,7 +226,6 @@
         diasSemana.push(fecha);
       }
 
-      // Cabecera
       let html = '<thead><tr><th>Hora</th>';
       const diasLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
       diasSemana.forEach((f, i) => {
@@ -204,7 +233,6 @@
       });
       html += '</tr></thead><tbody>';
 
-      // Rango de horas (08:00 a 20:00)
       for (let h = 8; h <= 20; h++) {
         const hora = h.toString().padStart(2, '0') + ':00';
         html += `<tr><td>${hora}</td>`;
@@ -223,10 +251,7 @@
       tabla.innerHTML = html;
     }
 
-    // Inicializar con la semana actual
     window.onload = generarCalendario;
   </script>
-
 </body>
 </html>
-
