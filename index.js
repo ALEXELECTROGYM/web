@@ -1,47 +1,51 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import { pool } from './db.js';
+// index.js
+const express = require('express');
+const cors = require('cors');
+const { Pool } = require('pg');
+require('dotenv').config();
 
-dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Registrar una cita
-app.post('/api/registro', async (req, res) => {
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
+
+app.post('/registro', async (req, res) => {
   const { nombre, fecha, hora } = req.body;
   try {
-    const existe = await pool.query(
+    const result = await pool.query(
       'SELECT * FROM citas WHERE fecha = $1 AND hora = $2',
       [fecha, hora]
     );
-    if (existe.rowCount > 0) {
-      return res.status(409).json({ mensaje: 'Ya está ocupada' });
+
+    if (result.rows.length > 0) {
+      return res.status(400).json({ mensaje: 'Ya existe una cita en ese horario.' });
     }
 
     await pool.query(
       'INSERT INTO citas (nombre, fecha, hora) VALUES ($1, $2, $3)',
       [nombre, fecha, hora]
     );
-    res.json({ mensaje: 'Cita registrada' });
+
+    res.json({ mensaje: 'Cita registrada exitosamente.' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ mensaje: 'Error del servidor' });
+    res.status(500).json({ mensaje: 'Error en el servidor.' });
   }
 });
 
-// Obtener todas las citas
-app.get('/api/citas', async (req, res) => {
+app.get('/citas', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM citas');
     res.json(result.rows);
   } catch (err) {
-    res.status(500).json({ mensaje: 'Error' });
+    res.status(500).json({ mensaje: 'Error al obtener citas.' });
   }
 });
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`Servidor en http://localhost:${port}`);
-});// JavaScript Document
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en puerto ${PORT}`);
+});
