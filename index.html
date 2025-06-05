@@ -3,120 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Registro de Usuario - ElectroGym</title>
+  <title>Registro de Usuario - Gimnasio</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-      margin: 0;
-    }
-
-    .container {
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 600px;
-      margin-bottom: 30px;
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    label {
-      font-weight: bold;
-      margin-top: 10px;
-      display: block;
-    }
-
-    input, button {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      font-size: 1em;
-    }
-
-    button {
-      background: #28a745;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #218838;
-    }
-
-    .message, .error {
-      text-align: center;
-      margin-top: 10px;
-    }
-
-    .error {
-      color: red;
-    }
-
-    .calendar-container {
-      width: 100%;
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 30px;
-      font-size: 0.9em;
-      min-width: 600px;
-    }
-
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: center;
-      min-width: 80px;
-    }
-
-    th {
-      background: #f0f0f0;
-    }
-
+    /* ... (estilos iguales que antes, puedes conservar los tuyos) ... */
     .occupied {
       background-color: #d3d3d3;
-    }
-
-    img {
-      max-width: 100%;
-      height: auto;
-      display: block;
-      margin: 0 auto 20px auto;
-    }
-
-    @media (max-width: 480px) {
-      input, button {
-        font-size: 0.95em;
-        padding: 8px;
-      }
-
-      table {
-        font-size: 0.8em;
-      }
-
-      th, td {
-        padding: 6px;
-      }
     }
   </style>
 </head>
@@ -132,39 +23,34 @@
       <label for="fecha">Fecha de clase</label>
       <input type="date" id="fecha" required>
 
-      <label for="hora">Hora de clase</label>
-      <input type="time" id="hora" required>
+      <label for="hora">Hora de clase (en bloques de 30 minutos)</label>
+      <input type="time" id="hora" step="1800" min="06:00" max="20:00" required>
 
       <button type="submit">Registrar</button>
     </form>
-
-    <button id="verUsuarios">Ver Usuarios Inscritos</button>
 
     <div class="message" id="mensaje"></div>
     <div class="error" id="error"></div>
   </div>
 
   <div class="container">
-    <label for="semana">Ver calendario semanal desde fecha:</label>
+    <label for="fechaInicio">Ver calendario semanal desde:</label>
     <input type="date" id="fechaInicio">
     <button onclick="generarCalendario()">Actualizar Calendario</button>
 
     <div class="calendar-container">
-      <table id="calendario">
-        <!-- Calendario generado con JS -->
-      </table>
+      <table id="calendario"></table>
     </div>
   </div>
 
   <script>
-    let fechasOcupadas = JSON.parse(localStorage.getItem('fechasOcupadas')) || [];
-    let usuariosInscritos = JSON.parse(localStorage.getItem('usuariosInscritos')) || [];
+    const API_URL = 'https://TU_BACKEND_RAILWAY.up.railway.app/api'; // Reemplaza esto
 
     const form = document.getElementById('registroForm');
     const mensaje = document.getElementById('mensaje');
     const error = document.getElementById('error');
 
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', async function(e) {
       e.preventDefault();
       mensaje.textContent = '';
       error.textContent = '';
@@ -173,46 +59,31 @@
       const fecha = document.getElementById('fecha').value;
       const hora = document.getElementById('hora').value;
 
-      const [hh, mm] = hora.split(':');
-      if (!(mm === '00' || mm === '30')) {
-        error.textContent = 'Solo se permiten citas cada media hora (:00 o :30)';
+      if (!nombre || !fecha || !hora) {
+        error.textContent = "Todos los campos son obligatorios";
         return;
       }
 
-      const fechaYHora = `${fecha} ${hora}`;
+      try {
+        const res = await fetch(`${API_URL}/registro`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre, fecha, hora })
+        });
 
-      if (fechasOcupadas.includes(fechaYHora)) {
-        error.textContent = '¡Esta fecha y hora ya están ocupadas!';
-        return;
+        const data = await res.json();
+        if (!res.ok) {
+          error.textContent = data.mensaje;
+        } else {
+          mensaje.textContent = data.mensaje;
+          generarCalendario();
+        }
+      } catch (err) {
+        error.textContent = 'Error al conectar con el servidor.';
       }
-
-      fechasOcupadas.push(fechaYHora);
-      usuariosInscritos.push({ nombre, fecha, hora });
-
-      localStorage.setItem('fechasOcupadas', JSON.stringify(fechasOcupadas));
-      localStorage.setItem('usuariosInscritos', JSON.stringify(usuariosInscritos));
-
-      const mensajeWhatsapp = `Nuevo registro en el gimnasio:\nNombre: ${nombre}\nFecha: ${fecha}\nHora: ${hora}`;
-      const urlWhatsapp = `https://wa.me/3318484742?text=${encodeURIComponent(mensajeWhatsapp)}`;
-      window.location.href = urlWhatsapp;
-
-      mensaje.textContent = `¡Registro exitoso para ${nombre} el ${fecha} a las ${hora}!`;
-      generarCalendario();
     });
 
-    document.getElementById('verUsuarios').addEventListener('click', function () {
-      if (usuariosInscritos.length === 0) {
-        alert("No hay usuarios inscritos.");
-        return;
-      }
-      let lista = "Usuarios Inscritos:\n";
-      usuariosInscritos.forEach(u => {
-        lista += `Nombre: ${u.nombre}, Fecha: ${u.fecha}, Hora: ${u.hora}\n`;
-      });
-      alert(lista);
-    });
-
-    function generarCalendario() {
+    async function generarCalendario() {
       const tabla = document.getElementById('calendario');
       const inputFecha = document.getElementById('fechaInicio');
       let fechaBase = new Date();
@@ -226,40 +97,42 @@
       lunes.setDate(lunes.getDate() - (dia === 0 ? 6 : dia - 1));
 
       const diasSemana = [];
-      for (let i = 0; i < 6; i++) { // Lunes a sábado
+      for (let i = 0; i < 6; i++) { // solo de lunes a sábado
         const fecha = new Date(lunes);
         fecha.setDate(lunes.getDate() + i);
         diasSemana.push(fecha);
       }
 
-      let html = '<thead><tr><th>Hora</th>';
       const diasLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+      let html = '<thead><tr><th>Hora</th>';
       diasSemana.forEach((f, i) => {
         html += `<th>${diasLabels[i]}<br>${f.toISOString().split('T')[0]}</th>`;
       });
       html += '</tr></thead><tbody>';
 
+      const horas = [];
       for (let h = 6; h <= 20; h++) {
-        for (let m of ['00', '30']) {
-          const hora = `${h.toString().padStart(2, '0')}:${m}`;
-          html += `<tr><td>${hora}</td>`;
-
-          diasSemana.forEach(f => {
-            const fechaStr = f.toISOString().split('T')[0];
-            const clave = `${fechaStr} ${hora}`;
-            const index = fechasOcupadas.indexOf(clave);
-
-            if (index !== -1) {
-              const nombre = usuariosInscritos[index]?.nombre || 'Ocupado';
-              html += `<td class="occupied">${nombre}</td>`;
-            } else {
-              html += `<td></td>`;
-            }
-          });
-
-          html += '</tr>';
-        }
+        horas.push(`${String(h).padStart(2, '0')}:00`);
+        if (h < 20) horas.push(`${String(h).padStart(2, '0')}:30`);
       }
+
+      let citas = [];
+      try {
+        const res = await fetch(`${API_URL}/citas`);
+        citas = await res.json();
+      } catch {
+        error.textContent = 'No se pudo obtener el calendario.';
+      }
+
+      horas.forEach(hora => {
+        html += `<tr><td>${hora}</td>`;
+        diasSemana.forEach(f => {
+          const fechaStr = f.toISOString().split('T')[0];
+          const cita = citas.find(c => c.fecha === fechaStr && c.hora === hora);
+          html += `<td class="${cita ? 'occupied' : ''}">${cita ? cita.nombre : ''}</td>`;
+        });
+        html += '</tr>';
+      });
 
       html += '</tbody>';
       tabla.innerHTML = html;
@@ -269,4 +142,3 @@
   </script>
 </body>
 </html>
-

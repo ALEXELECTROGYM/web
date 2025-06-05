@@ -1,14 +1,15 @@
 {
-  "name": "gym-backend",
+  "name": "gimnasio-backend",
   "version": "1.0.0",
-  "description": "Backend para gestión de horarios del gimnasio",
-  "main": "server.js",
+  "main": "index.js",
+  "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "node index.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
     "express": "^4.18.2",
-    "sqlite3": "^5.1.6"
+    "pg": "^8.11.1"
   }
 }
