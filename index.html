@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Registro de Usuario - Gimnasio</title>
+  <title>Registro de Usuario - ElectroGym</title>
   <style>
     * {
       box-sizing: border-box;
@@ -173,6 +173,12 @@
       const fecha = document.getElementById('fecha').value;
       const hora = document.getElementById('hora').value;
 
+      const [hh, mm] = hora.split(':');
+      if (!(mm === '00' || mm === '30')) {
+        error.textContent = 'Solo se permiten citas cada media hora (:00 o :30)';
+        return;
+      }
+
       const fechaYHora = `${fecha} ${hora}`;
 
       if (fechasOcupadas.includes(fechaYHora)) {
@@ -191,7 +197,7 @@
       window.location.href = urlWhatsapp;
 
       mensaje.textContent = `¡Registro exitoso para ${nombre} el ${fecha} a las ${hora}!`;
-      generarCalendario(); // Actualiza el calendario
+      generarCalendario();
     });
 
     document.getElementById('verUsuarios').addEventListener('click', function () {
@@ -220,31 +226,39 @@
       lunes.setDate(lunes.getDate() - (dia === 0 ? 6 : dia - 1));
 
       const diasSemana = [];
-      for (let i = 0; i < 7; i++) {
+      for (let i = 0; i < 6; i++) { // Lunes a sábado
         const fecha = new Date(lunes);
         fecha.setDate(lunes.getDate() + i);
         diasSemana.push(fecha);
       }
 
       let html = '<thead><tr><th>Hora</th>';
-      const diasLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+      const diasLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
       diasSemana.forEach((f, i) => {
         html += `<th>${diasLabels[i]}<br>${f.toISOString().split('T')[0]}</th>`;
       });
       html += '</tr></thead><tbody>';
 
-      for (let h = 8; h <= 20; h++) {
-        const hora = h.toString().padStart(2, '0') + ':00';
-        html += `<tr><td>${hora}</td>`;
+      for (let h = 6; h <= 20; h++) {
+        for (let m of ['00', '30']) {
+          const hora = `${h.toString().padStart(2, '0')}:${m}`;
+          html += `<tr><td>${hora}</td>`;
 
-        diasSemana.forEach(f => {
-          const fechaStr = f.toISOString().split('T')[0];
-          const clave = `${fechaStr} ${hora}`;
-          const ocupada = fechasOcupadas.includes(clave);
-          html += `<td class="${ocupada ? 'occupied' : ''}">${ocupada ? 'Ocupado' : ''}</td>`;
-        });
+          diasSemana.forEach(f => {
+            const fechaStr = f.toISOString().split('T')[0];
+            const clave = `${fechaStr} ${hora}`;
+            const index = fechasOcupadas.indexOf(clave);
 
-        html += '</tr>';
+            if (index !== -1) {
+              const nombre = usuariosInscritos[index]?.nombre || 'Ocupado';
+              html += `<td class="occupied">${nombre}</td>`;
+            } else {
+              html += `<td></td>`;
+            }
+          });
+
+          html += '</tr>';
+        }
       }
 
       html += '</tbody>';
@@ -255,3 +269,4 @@
   </script>
 </body>
 </html>
+
