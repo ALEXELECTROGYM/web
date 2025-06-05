@@ -87,11 +87,33 @@
     .occupied {
       background-color: #d3d3d3;
     }
+     .logo {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto 20px auto;
+  }
+
+  @media (max-width: 480px) {
+    input, button {
+      font-size: 0.95em;
+      padding: 8px;
+    }
+
+    table {
+      font-size: 0.8em;
+    }
+
+    th, td {
+      padding: 6px;
+    }
+  }
+</style>
   </style>
 </head>
 <body>
   <div class="container">
-    <img src="logogym.jpg" alt="Logo del gimnasio">
+    <img src="logogym.jpg" alt="Logo del gimnasio" class="logo">
     <h1>Registro de Usuario</h1>
 
     <form id="registroForm">
